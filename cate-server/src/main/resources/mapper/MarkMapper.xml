@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.javaclimb.cate.dao.MarkMapper">
+    <resultMap id="BaseResultMap" type="com.javaclimb.cate.domain.Mark" >
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="consumer_id" jdbcType="INTEGER" property="consumerId"/>
+        <result column="type_s" jdbcType="TINYINT" property="typeS"/>
+        <result column="food_id" jdbcType="INTEGER" property="foodId"/>
+        <result column="food_list_id" jdbcType="INTEGER" property="foodListId"/>
+        <result column="food_window_id" jdbcType="INTEGER" property="foodWindowId"/>
+        <result column="score" jdbcType="INTEGER" property="score"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.javaclimb.cate.domain.Mark">
+        insert into mark
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="consumerId != null">
+                consumer_id,
+            </if>
+            <if test="typeS != null">
+                type_s,
+            </if>
+            <if test="foodId != null">
+                food_id,
+            </if>
+            <if test="foodListId != null">
+                food_list_id,
+            </if>
+            <if test="foodWindowId != null">
+                food_window_id,
+            </if>
+            <if test="score != null">
+                score,
+            </if>
+        </trim>
+        <trim prefix=" values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id},
+            </if>
+            <if test="consumerId != null">
+                #{consumerId},
+            </if>
+            <if test="typeS != null">
+                #{typeS},
+            </if>
+            <if test="foodId != null">
+                #{foodId},
+            </if>
+            <if test="foodListId != null">
+                #{foodListId},
+            </if>
+            <if test="foodWindowId != null">
+                #{foodWindowId},
+            </if>
+            <if test="score != null">
+                #{score},
+            </if>
+        </trim>        
+    </insert>
+
+    <select id="selectFoodScoreSum" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+        select COALESCE(sum(score),0) as score
+        from mark
+        where food_id = #{foodId}
+    </select>
+    <select id="selectFoodListScoreSum" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+        select COALESCE(sum(score),0) as score
+        from mark
+        where food_list_id = #{foodListId}
+    </select>
+    <select id="selectFoodWindowScoreSum" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+        select COALESCE(sum(score),0) as score
+        from mark
+        where food_window_id = #{foodWindowId}
+    </select>
+
+    <select id="selectFoodMarkNum" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+        select COALESCE(count(id),0) as num
+        from mark
+        where food_id = #{foodId}
+    </select>
+    <select id="selectFoodListMarkNum" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+        select COALESCE(count(id),0) as num
+        from mark
+        where food_list_id = #{foodListId}
+    </select>
+    <select id="selectFoodWindowMarkNum" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+        select COALESCE(count(id),0) as num
+        from mark
+        where food_window_id = #{foodWindowId}
+    </select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

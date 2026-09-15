@@ -1,0 +1,6 @@
+本系统采用前后端分离开发。
+front 为前端代码文件夹：cate-client 是用户端，cate-manage 是管理端。
+cate-server 为后端代码文件夹。
+
+建议环境：JDK 8、Maven 3.9、MySQL 8.0、Node.js 14.15.1。
+数据库密码、加密密钥等本机配置不再写在源码中，请按照 README.md 设置环境变量后运行。

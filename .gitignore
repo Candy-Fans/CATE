@@ -1,0 +1,32 @@
+# Maven / Java
+target/
+*.class
+*.jar
+
+# Node
+node_modules/
+dist/
+npm-debug.log*
+yarn-error.log*
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Runtime files
+*.log
+*.err
+
+# User-uploaded content
+cate-server/avatorImages/*
+!cate-server/avatorImages/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local configuration
+.env
+.env.*
+!.env.example

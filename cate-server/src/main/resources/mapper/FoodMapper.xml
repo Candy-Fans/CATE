@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.javaclimb.cate.dao.FoodMapper">
+    <resultMap id="BaseResultMap" type="com.javaclimb.cate.domain.Food">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="food_window_id" jdbcType="VARCHAR" property="foodWindowId"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="introduction" jdbcType="VARCHAR"
+                property="introduction"/>
+        <result column="create_time" jdbcType="TIMESTAMP"
+                property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP"
+                property="updateTime"/>
+        <result column="pic" jdbcType="VARCHAR" property="pic"/>
+        <result column="price" jdbcType="INTEGER" property="price"/>
+
+        <result column="nums" jdbcType="INTEGER" property="nums"/>
+
+    </resultMap>
+
+    <resultMap id="ResultMapWithBLOBs" type="com.javaclimb.cate.domain.Food"
+               extends="BaseResultMap">
+        <result column="lyric" jdbcType="LONGVARCHAR" property="lyric"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,food_window_id,name,introduction,create_time,update_time,pic,price,nums
+    </sql>
+
+    <sql id="Blob_Column_List">
+        id
+        ,food_window_id,name,introduction,create_time,update_time,pic,price,nums
+    </sql>
+
+    <insert id="insert" parameterType="com.javaclimb.cate.domain.Food">
+        insert into food
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="foodWindowId != null">
+                food_window_id,
+            </if>
+            <if test="name != null">
+                name,
+            </if>
+            <if test="introduction != null">
+                introduction,
+            </if>
+            create_time,update_time,
+            <if test="pic != null">
+                pic,
+            </if>
+
+            <if test="price != null">
+                price,
+            </if>
+
+            nums
+        </trim>
+        <trim prefix=" values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id},
+            </if>
+            <if test="foodWindowId != null">
+                #{foodWindowId},
+            </if>
+            <if test="name != null">
+                #{name},
+            </if>
+            <if test="introduction != null">
+                #{introduction},
+            </if>
+            now(),now(),
+            <if test="pic != null">
+                #{pic},
+            </if>
+
+            <if test="price != null">
+                #{price},
+            </if>
+            nums=0
+        </trim>
+    </insert>
+
+    <update id="update" parameterType="com.javaclimb.cate.domain.Food">
+        update food
+        <set>
+            <if test="foodWindowId != null">
+                food_window_id = #{foodWindowId},
+            </if>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="introduction != null">
+                introduction = #{introduction},
+            </if>
+            update_time = now(),
+            <if test="pic != null">
+                pic = #{pic},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="nums != null">
+                nums = #{nums},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="addNums" parameterType="java.lang.Integer">
+        update food
+        set nums=nums + 1
+        where id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="java.lang.Integer">
+        delete
+        from food
+        where id = #{id}
+    </delete>
+
+    <select id="selectByPrimaryKey" resultMap="ResultMapWithBLOBs"
+            parameterType="java.lang.Integer">
+        select
+        <include refid="Blob_Column_List"/>
+        from food
+        where id=#{id}
+    </select>
+
+    <select id="allFood" resultMap="ResultMapWithBLOBs">
+        select
+        <include refid="Blob_Column_List"/>
+        from food
+    </select>
+
+    <select id="topFood" resultMap="ResultMapWithBLOBs">
+        select
+        <include refid="Blob_Column_List"/>
+        from food order by nums desc
+    </select>
+
+    <select id="foodOfName" resultMap="ResultMapWithBLOBs"
+            parameterType="java.lang.String">
+        select
+        <include refid="Blob_Column_List"/>
+        from food
+        where name = #{name}
+    </select>
+
+    <select id="likeFoodOfName" resultMap="ResultMapWithBLOBs"
+            parameterType="java.lang.String">
+        select
+        <include refid="Blob_Column_List"/>
+        from food
+        where name like #{name}
+    </select>
+
+    <select id="foodOfFoodWindowId" resultMap="ResultMapWithBLOBs"
+            parameterType="java.lang.Integer">
+        select
+        <include refid="Blob_Column_List"/>
+        from food
+        where food_window_id = #{foodWindowId}
+    </select>
+
+    <!-- 随机选取一条食物记录 -->
+    <select id="randomFood" resultMap="ResultMapWithBLOBs"
+            parameterType="java.lang.Integer">
+        SELECT * FROM food
+        ORDER BY RAND()
+            LIMIT 1
+    </select>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
