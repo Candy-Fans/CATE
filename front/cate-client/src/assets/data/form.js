@@ -11,16 +11,11 @@ const rules = {
     {required: true, message: '请选择性别', trigger: 'change'}
   ],
   phoneNum: [
-    {required: true, message: '电话号码是必填项', trigger: 'blur'},
-    {
-      pattern: /^(0|86|17951)?(13[0-9]|15[012356789]|166|17[3678]|18[0-9]|14[57])[0-9]{8}$/,
-      message: '电话号码不符合规范',
-      trigger: 'blur'
-    }
+    {required: true, message: '电话号码是必填项', trigger: 'blur'}
   ],
   email: [
     {message: '请输入邮箱地址', trigger: 'blur'},
-    {required: true,type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change']}
+    {required: true, type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change']}
   ],
   birth: [
     {required: true, message: '请选择日期', trigger: 'change'}
