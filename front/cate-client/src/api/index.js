@@ -38,6 +38,8 @@ export const listFoodDetail = (foodListId) => get(`listFood/detail?foodListId=${
 export const getAllConsumer = () => get(`consumer/allConsumer`)
 //注册
 export const SignUp = (params) => post(`/consumer/add`, params)
+//获取注册验证码，答案仅保存在服务端
+export const getRegistrationCaptcha = () => get('/consumer/captcha')
 //登录
 export const loginIn = (params) => post(`/consumer/login`, params)
 //根据用户id查询该用户的详细信息

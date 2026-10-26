@@ -35,9 +35,19 @@
                     <el-option v-for=" item in cities" :key="item.value" :label="item.label" :value="item.value"></el-option>
                 </el-select>
             </el-form-item>
+            <el-form-item prop="captchaCode" label="验证码">
+                <div class="captcha-row">
+                    <el-input v-model.trim="registerForm.captchaCode" placeholder="图片字符" :maxlength="5" autocomplete="off" :disabled="submitting"></el-input>
+                    <button type="button" class="captcha-button" :disabled="captchaLoading || submitting" title="点击换一张" aria-label="刷新验证码" @click="refreshCaptcha">
+                        <img v-if="captchaImage" :src="captchaImage" alt="注册验证码">
+                        <span v-else>{{ captchaLoading ? '加载中' : '点击重试' }}</span>
+                    </button>
+                </div>
+                <div class="captcha-hint">不区分大小写，5 分钟有效；点击图片可更换</div>
+            </el-form-item>
             <div class="login-btn">
                 <el-button @click="goback(-1)">取消</el-button>
-                <el-button type="primary" @click="submitRegister">确定</el-button>
+                <el-button type="primary" :loading="submitting" :disabled="captchaLoading || !captchaId || registered" @click="submitRegister">确定</el-button>
             </div>
         </el-form>
     </div>
@@ -47,7 +57,7 @@
 
 import {rules,cities} from '../assets/data/form'
 import {mixin} from '../mixins'
-import {SignUp} from '../api/index'
+import {SignUp, getRegistrationCaptcha} from '../api/index'
 
 export default {
     name: 'sing-up',
@@ -64,21 +74,51 @@ export default {
                 email: '',          //邮箱
                 birth: '',          //生日
                 introduction: '',   //签名
-                location: ''       //地区
+                location: '',       //地区
+                captchaCode: ''
             },
             cities: [],            //所有的地区--省
-            rules: {}               //表单提交的规则
+            rules: {},              //表单提交的规则
+            captchaId: '',
+            captchaImage: '',
+            captchaLoading: false,
+            submitting: false,
+            registered: false
         }
     },
     created() {
-        this.rules = rules;
+        this.rules = Object.assign({}, rules, {
+            captchaCode: [
+                {required: true, message: '请输入图片验证码', trigger: 'blur'},
+                {pattern: /^[a-zA-Z0-9]{5}$/, message: '请输入 5 位图片字符', trigger: 'blur'}
+            ]
+        });
         this.cities = cities;
+        this.refreshCaptcha();
     },
     methods:{
+      async refreshCaptcha () {
+          if (this.captchaLoading || this.submitting) return;
+          this.captchaLoading = true;
+          this.captchaId = '';
+          this.captchaImage = '';
+          this.registerForm.captchaCode = '';
+          try {
+              const res = await getRegistrationCaptcha();
+              if (res.code !== 1 || !res.captchaId || !res.image) throw new Error('验证码加载失败');
+              this.captchaId = res.captchaId;
+              this.captchaImage = res.image;
+          } catch (err) {
+              this.notify('验证码加载失败，请点击重试', 'error');
+          } finally {
+              this.captchaLoading = false;
+          }
+      },
       //提交注册
       submitRegister(){
+          if (this.submitting || this.captchaLoading || !this.captchaId || this.registered) return;
           this.$refs['registerForm'].validate((valid) => {
-            if(valid){
+            if(valid && !this.submitting && !this.registered){
               let _this = this;
               let d = this.registerForm.birth;
               let datetime = d.getFullYear() + '-' +(d.getMonth() + 1) +'-' + d.getDate();
@@ -92,19 +132,27 @@ export default {
               params.append('introduction',this.registerForm.introduction);
               params.append('location',this.registerForm.location);
               params.append('avator','/img/user.jpg');
+              params.append('captchaId',this.captchaId);
+              params.append('captchaCode',this.registerForm.captchaCode);
+              this.submitting = true;
               SignUp(params)
                 .then(res => {
+                  _this.submitting = false;
                   if(res.code == 1){
+                    _this.registered = true;
                     _this.notify('注册成功','success');
                     setTimeout(function(){
                       _this.$router.push({path: '/'});
                     },2000);
                   }else{
-                    _this.notify('注册失败','error');
+                    _this.notify(res.msg || '注册失败','error');
+                    _this.refreshCaptcha();
                   }
                 })
                 .catch(err => {
-                  _this.notify('注册失败','error');
+                  _this.submitting = false;
+                  _this.notify('注册失败，请检查网络后重试','error');
+                  _this.refreshCaptcha();
                 })
             }
           });
@@ -120,5 +168,34 @@ export default {
 @import '../assets/css/sign-up.scss';
 .demo-ruleForm{
   padding: 10px;
+}
+.captcha-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.captcha-row .el-input {
+  flex: 1;
+  min-width: 0;
+}
+.captcha-button {
+  flex: 0 0 130px;
+  height: 40px;
+  padding: 0;
+  cursor: pointer;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: #fff;
+  overflow: hidden;
+}
+.captcha-button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.captcha-hint {
+  font-size: 12px;
+  line-height: 20px;
+  color: #606266;
 }
 </style>

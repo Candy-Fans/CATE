@@ -77,7 +77,7 @@
     <el-dialog title="添加新用户" :visible.sync="centerDialogVisible" width="400px"
                center>
       <el-form :model="registerForm" ref="registerForm" label-width="80px"
-               :rules="rules">
+               :rules="registrationRules">
         <el-form-item prop="username" label="用户名" size="mini">
           <el-input v-model="registerForm.username"
                     placeholder="用户名"></el-input>
@@ -109,11 +109,21 @@
         <el-form-item prop="location" label="地区" size="mini">
           <el-input v-model="registerForm.location" placeholder="地区"></el-input>
         </el-form-item>
+        <el-form-item prop="captchaCode" label="验证码" size="mini">
+          <div class="captcha-row">
+            <el-input v-model.trim="registerForm.captchaCode" placeholder="图片字符" :maxlength="5" autocomplete="off" :disabled="addingConsumer"></el-input>
+            <button type="button" class="captcha-button" :disabled="captchaLoading || addingConsumer" title="点击换一张" aria-label="刷新验证码" @click="refreshCaptcha">
+              <img v-if="captchaImage" :src="captchaImage" alt="添加用户验证码">
+              <span v-else>{{ captchaLoading ? '加载中' : '点击重试' }}</span>
+            </button>
+          </div>
+          <div class="captcha-hint">不区分大小写，5 分钟有效；点击图片可更换</div>
+        </el-form-item>
       </el-form>
       <span slot="footer">
                 <el-button size="mini"
                            @click="centerDialogVisible = false">取消</el-button>
-                <el-button size="mini" @click="addConsumer">确定</el-button>
+                <el-button size="mini" :loading="addingConsumer" :disabled="captchaLoading || !captchaId" @click="addConsumer">确定</el-button>
             </span>
     </el-dialog>
 
@@ -169,6 +179,7 @@
 import {
   getAllConsumer,
   setConsumer,
+  getRegistrationCaptcha,
   updateConsumer,
   delConsumer,
 } from '../api/index'
@@ -189,8 +200,13 @@ export default {
         email: '',
         birth: '',
         introduction: '',
-        location: ''
+        location: '',
+        captchaCode: ''
       },
+      captchaId: '',
+      captchaImage: '',
+      captchaLoading: false,
+      addingConsumer: false,
       form: {      //编辑框
         id: '',
         username: '',
@@ -236,12 +252,23 @@ export default {
     }
   },
   computed: {
+    registrationRules () {
+      return Object.assign({}, this.rules, {
+        captchaCode: [
+          {required: true, message: '请输入图片验证码', trigger: 'blur'},
+          {pattern: /^[a-zA-Z0-9]{5}$/, message: '请输入 5 位图片字符', trigger: 'blur'}
+        ]
+      })
+    },
     //计算当前搜索结果表里的数据
     data () {
       return this.tableData.slice((this.currentPage - 1) * this.pageSize, this.currentPage * this.pageSize)
     }
   },
   watch: {
+    centerDialogVisible (visible) {
+      if (visible) this.refreshCaptcha()
+    },
     //搜索框里面的内容发生变化的时候，搜索结果table列表的内容跟着它的内容发生变化
     select_word: function () {
       if (this.select_word == '') {
@@ -260,6 +287,23 @@ export default {
     this.getData()
   },
   methods: {
+    async refreshCaptcha () {
+      if (this.captchaLoading || this.addingConsumer) return
+      this.captchaLoading = true
+      this.captchaId = ''
+      this.captchaImage = ''
+      this.registerForm.captchaCode = ''
+      try {
+        const res = await getRegistrationCaptcha()
+        if (res.code !== 1 || !res.captchaId || !res.image) throw new Error('验证码加载失败')
+        this.captchaId = res.captchaId
+        this.captchaImage = res.image
+      } catch (err) {
+        this.notify('验证码加载失败，请点击重试', 'error')
+      } finally {
+        this.captchaLoading = false
+      }
+    },
     //获取当前页
     handleCurrentChange (val) {
       this.currentPage = val
@@ -276,8 +320,9 @@ export default {
     },
     //添加用户
     addConsumer () {
+      if (this.addingConsumer || this.captchaLoading || !this.captchaId) return
       this.$refs['registerForm'].validate(valid => {
-        if (valid) {
+        if (valid && !this.addingConsumer) {
           let d = this.registerForm.birth
           let datetime = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
           let params = new URLSearchParams()
@@ -290,19 +335,26 @@ export default {
           params.append('introduction', this.registerForm.introduction)
           params.append('location', this.registerForm.location)
           params.append('avator', '/img/user.jpg')
+          params.append('captchaId', this.captchaId)
+          params.append('captchaCode', this.registerForm.captchaCode)
+          this.addingConsumer = true
           setConsumer(params)
             .then(res => {
+              this.addingConsumer = false
               if (res.code == 1) {
+                this.centerDialogVisible = false
                 this.getData()
                 this.notify('添加成功', 'success')
               } else {
-                this.notify('添加失败', 'error')
+                this.notify(res.msg || '添加失败', 'error')
+                this.refreshCaptcha()
               }
             })
             .catch(err => {
-              console.log(err)
+              this.addingConsumer = false
+              this.notify('添加失败，请检查网络后重试', 'error')
+              this.refreshCaptcha()
             })
-          this.centerDialogVisible = false
         }
       })
 
@@ -384,6 +436,35 @@ export default {
 </script>
 
 <style scoped>
+.captcha-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.captcha-row .el-input {
+  flex: 1;
+  min-width: 0;
+}
+.captcha-button {
+  flex: 0 0 130px;
+  height: 40px;
+  padding: 0;
+  cursor: pointer;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: #fff;
+  overflow: hidden;
+}
+.captcha-button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.captcha-hint {
+  font-size: 12px;
+  line-height: 20px;
+  color: #606266;
+}
 .handle-box {
   margin-bottom: 20px;
 }

@@ -13,14 +13,14 @@
             <el-button type="primary" class="sub-btn" @click="postComment">评论</el-button>
         </div>
         <p>精彩评论：共{{commentList.length}}条评论</p>
-        <ul class="popular" v-for="(item,index) in commentList" :key="index">
+        <ul class="popular" v-for="(item,index) in commentList" :key="item.id">
             <li>
                 <div class="popular-img">
-                    <img :src="attachImageUrl(userPic[index])">
+                    <img :src="attachImageUrl(item.avator)">
                 </div>
                 <div class="popular-msg">
                     <ul>
-                        <li class="name">{{userName[index]}}</li>
+                        <li class="name">{{item.username}}</li>
                         <li class="time">{{item.createTime}}</li>
                         <li class="content">{{item.content}}</li>
                     </ul>
@@ -60,12 +60,24 @@ export default {
         return{
             textarea: '',        //存放输入的评论内容
             commentList: [],    //存放评论列表
-            userPic: [],        //用户的头像
-            userName: [],       //用户的昵称
+            commentRequestId: 0 //仅应用最新一次评论加载结果
+        }
+    },
+    watch: {
+        playId () {
+            this.commentList = [];
+            this.getComment();
+        },
+        type () {
+            this.commentList = [];
+            this.getComment();
         }
     },
     mounted(){
         this.getComment();
+    },
+    beforeDestroy () {
+        this.commentRequestId++;
     },
     methods: {
         //提交评论
@@ -101,27 +113,39 @@ export default {
             }
         },
         //评论列表
-        getComment(){
-            getAllComment(this.type,this.playId)
-                .then(res => {
-                        this.commentList = res;
-                        for(let item of res){
-                            this.getUsers(item.userId);
-                        }
-                    })
-                    .catch(err =>{
-                        this.notify('评论加载失败','error');
-                    })
+        async getComment(){
+            const requestId = ++this.commentRequestId;
+            try {
+                const comments = await getAllComment(this.type,this.playId);
+                const users = {};
+                // 将作者绑定到评论对象，避免异步返回顺序改变昵称与正文的对应关系。
+                const commentList = await Promise.all(comments.map(async item => {
+                    if (!users[item.userId]) {
+                        users[item.userId] = this.getUsers(item.userId);
+                    }
+                    const author = await users[item.userId];
+                    return Object.assign({}, item, author);
+                }));
+                if (requestId === this.commentRequestId) {
+                    this.commentList = commentList;
+                }
+            } catch (err) {
+                if (requestId === this.commentRequestId) {
+                    this.notify('评论加载失败','error');
+                }
+            }
         },
         //获取用户的头像和昵称
         getUsers(id){
-            getUserOfId(id)
+            return getUserOfId(id)
                 .then(res => {
-                        this.userPic.push(res.avator);
-                        this.userName.push(res.username);
+                        return {
+                            username: res && res.username ? res.username : '已注销用户',
+                            avator: res && res.avator ? res.avator : ''
+                        };
                     })
                     .catch(err =>{
-                        this.notify('出错了','error');
+                        return {username: '用户信息暂不可用', avator: ''};
                     })
         },
         //给某一个评论点赞

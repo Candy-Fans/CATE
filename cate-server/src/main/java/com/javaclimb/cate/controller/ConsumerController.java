@@ -7,6 +7,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.javaclimb.cate.domain.Consumer;
 import com.javaclimb.cate.service.ConsumerService;
+import com.javaclimb.cate.service.RegistrationCaptchaService;
 import com.javaclimb.cate.utils.CipherBean;
 import com.javaclimb.cate.utils.Consts;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +36,15 @@ public class ConsumerController {
     private CipherBean cipher;
     @Autowired
     private ConsumerService consumerService;
+    @Autowired
+    private RegistrationCaptchaService registrationCaptchaService;
+
+    @GetMapping("/captcha")
+    public Object registrationCaptcha(HttpServletRequest request, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        return registrationCaptchaService.create(request.getSession(true));
+    }
 
 
     /**
@@ -42,6 +53,12 @@ public class ConsumerController {
     @RequestMapping(value = "/add", method = RequestMethod.POST)
     public Object addConsumer(HttpServletRequest request) {
         JSONObject jsonObject = new JSONObject();
+        if (!registrationCaptchaService.consume(request.getSession(false),
+                request.getParameter("captchaId"), request.getParameter("captchaCode"))) {
+            jsonObject.put(Consts.CODE, 0);
+            jsonObject.put(Consts.MSG, "验证码错误或已过期，请刷新后重试");
+            return jsonObject;
+        }
         String username = request.getParameter("username").trim();     //账号
         String passwordFont = request.getParameter("password").trim();     //密码
         //加密

@@ -58,6 +58,7 @@ export const delListFood = (foodId, foodListId) => get(`listFood/delete?foodId=$
 export const getAllConsumer = () => get(`consumer/allConsumer`)
 //添加用户
 export const setConsumer = (params) => post(`consumer/add`, params)
+export const getRegistrationCaptcha = () => get('consumer/captcha')
 //编辑用户
 export const updateConsumer = (params) => post(`consumer/update`, params)
 //删除用户
