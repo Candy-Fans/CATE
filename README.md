@@ -146,32 +146,6 @@ cd D:\WorkSpace\CATE\front\cate-client
 npm run build
 ```
 
-## GitHub 发布步骤
-
-本地仓库使用 `main` 分支。首次发布前先在 GitHub 新建一个空仓库，不要勾选自动创建 README、`.gitignore` 或 License，然后执行：
-
-```powershell
-cd D:\WorkSpace\CATE
-git config user.name "你的 GitHub 显示名称"
-git config user.email "你的 GitHub 邮箱"
-git add .
-git status
-git commit -m "chore: initial public version"
-git remote add origin https://github.com/你的用户名/你的仓库名.git
-git push -u origin main
-```
-
-以后每次完成一小组修改：
-
-```powershell
-git status
-git diff
-git add .
-git commit -m "feat: 简短说明这次做了什么"
-git push
-```
-
-提交前要先看 `git status` 和 `git diff`，确认没有数据库密码、密钥、个人资料、构建目录或无关大文件。
 
 ## 数据与安全说明
 
@@ -183,6 +157,4 @@ git push
 
 ## 来源与许可证
 
-本仓库用于个人学习、实践和持续改进。现有包名、代码署名等信息表明项目可能基于教程或其他示例项目，但原始来源和授权条款目前尚未核实。因此，本仓库不声明全部代码均为原创，也暂不附加开源许可证。
-
-在公开宣传前，应补充原教程或上游仓库链接、保留原作者要求的署名，并在项目介绍中明确说明自己完成的修改。你可以将它描述为“我学习、搭建并持续维护的项目”，但在来源确认前不宜描述为“全部从零独立原创”。
+本仓库用于个人学习、实践和持续改进。项目基于网络各种教程和其他示例项目，本仓库不声明全部代码均为原创，也暂不附加开源许可证。
