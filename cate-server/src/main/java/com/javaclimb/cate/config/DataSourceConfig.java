@@ -1,12 +1,10 @@
 package com.javaclimb.cate.config;
 
-import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.spring.boot.autoconfigure.properties.DruidStatProperties;
 import com.alibaba.druid.support.http.StatViewServlet;
 import com.alibaba.druid.support.http.WebStatFilter;
 import com.alibaba.druid.util.Utils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +12,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.servlet.*;
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,11 +28,7 @@ public class DataSourceConfig {
     @Value("${spring.datasource.druid.statViewServlet.login-password}")
     private String druidPassword;
 
-    @ConfigurationProperties(prefix = "spring.datasource")
-    @Bean
-    public DataSource druid() {
-        return new DruidDataSource();
-    }
+    // 连接池交给 Druid starter 创建，以绑定 druid 配置并安装 SQL 统计过滤器。
 
     //配置Druid监控
     @Bean
