@@ -104,7 +104,7 @@ docker compose -f compose.release.yaml up --pull always --detach --wait
 docker compose up --build --detach --wait
 ```
 
-以下是不用 Docker 时的原生开发环境安装步骤。
+以下是不用 Docker 时的原生开发环境安装步骤
 
 ### 1. 克隆项目
 
