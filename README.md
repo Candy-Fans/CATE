@@ -80,6 +80,32 @@ npm -v
 
 ## 快速开始
 
+### 更简单：Docker 一键运行
+
+只需安装并启动 Docker Desktop，然后执行：
+
+```bash
+git clone https://github.com/Candy-Fans/CATE.git
+cd CATE
+docker compose -f compose.release.yaml up --pull always --detach --wait
+```
+
+- 用户端：<http://localhost:8081>
+- 管理端：<http://localhost:8080>，演示管理员 `demo-admin` / `123456`
+
+默认下载已发布的 `candyfans/cate-db:1.0.0`、`candyfans/cate-server:1.0.0` 和 `candyfans/cate-web:1.0.0`，无需本地编译。
+无需在本机安装 Java、Maven、Node.js 或 MySQL，也无需手动导入 SQL。首次启动自动初始化演示数据库；后续启动保留数据库和上传文件。
+不想克隆源码时，只需下载根目录的 [compose.release.yaml](compose.release.yaml)，放入空文件夹后执行同一条启动命令。
+当前镜像已在 Linux/amd64 环境验证。默认配置用于本机体验，源码构建、镜像更新、离线分享、改端口和常见问题见 [Docker 部署与分享说明](docs/DOCKER.md)。
+
+如果修改了源码，需要构建并运行自己的版本，在项目根目录执行：
+
+```bash
+docker compose up --build --detach --wait
+```
+
+以下是不用 Docker 时的原生开发环境安装步骤。
+
 ### 1. 克隆项目
 
 ```bash

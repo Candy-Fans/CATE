@@ -1,0 +1,15 @@
+.git
+**/.idea
+**/.vscode
+**/node_modules
+**/target
+**/dist
+**/coverage
+**/*.log
+**/*.err
+**/*.iml
+.env
+.env.*
+!.env.example
+cate-server/avatorImages/**
+docs

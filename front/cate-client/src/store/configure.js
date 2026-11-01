@@ -1,7 +1,7 @@
 const SHOW_PLAYER_KEY = 'showPlayer'
 const configure = {
   state: {
-    HOST: 'http://127.0.0.1:8888',  //后台访问地址根目录
+    HOST: process.env.CATE_API_BASE || 'http://127.0.0.1:8888',  //后台访问地址根目录
     activeName: '',                  //当前选中的菜单名
     loginIn: false,                 //用户是否已登录
     isActive: false,                //当前美食是否已收藏

@@ -1,0 +1,88 @@
+name: cate
+
+services:
+  mysql:
+    image: ${CATE_IMAGE_PREFIX:-cate}-db:${CATE_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: deploy/mysql/Dockerfile
+    environment:
+      MYSQL_DATABASE: cate
+      MYSQL_USER: ${CATE_DB_USERNAME:-cate}
+      MYSQL_PASSWORD: ${CATE_DB_PASSWORD:-cate-demo-password}
+      MYSQL_ROOT_PASSWORD: ${CATE_MYSQL_ROOT_PASSWORD:-cate-demo-root-password}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          MYSQL_PWD="$$MYSQL_PASSWORD" mysql --protocol=tcp -h 127.0.0.1
+          -u "$$MYSQL_USER" "$$MYSQL_DATABASE"
+          -e 'SELECT 1 FROM admin LIMIT 1' >/dev/null 2>&1
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  backend:
+    image: ${CATE_IMAGE_PREFIX:-cate}-server:${CATE_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: deploy/server/Dockerfile
+    environment:
+      CATE_DB_URL: jdbc:mysql://mysql:3306/cate?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2B8
+      CATE_DB_USERNAME: ${CATE_DB_USERNAME:-cate}
+      CATE_DB_PASSWORD: ${CATE_DB_PASSWORD:-cate-demo-password}
+      CATE_DRUID_USERNAME: ${CATE_DRUID_USERNAME:-admin}
+      CATE_DRUID_PASSWORD: ${CATE_DRUID_PASSWORD:-cate-demo-monitor-password}
+      CATE_CIPHER_KEY: ${CATE_CIPHER_KEY:-0123456789abcdef0123456789abcdef}
+      JAVA_TOOL_OPTIONS: -Djava.awt.headless=true -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - images:/app/img
+      - avatars:/app/avatorImages
+      - food-files:/app/food
+      - videos:/app/mv
+    healthcheck:
+      test: [CMD, bash, -c, "exec 3<>/dev/tcp/127.0.0.1/8888"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  web:
+    image: ${CATE_IMAGE_PREFIX:-cate}-web:${CATE_IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: deploy/web/Dockerfile
+    ports:
+      - "${CATE_BIND_ADDRESS:-127.0.0.1}:${CATE_MANAGE_PORT:-8080}:8080"
+      - "${CATE_BIND_ADDRESS:-127.0.0.1}:${CATE_CLIENT_PORT:-8081}:8081"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q -O /dev/null http://127.0.0.1:8080/ && wget -q -O /dev/null http://127.0.0.1:8081/
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  images:
+  avatars:
+  food-files:
+  videos:

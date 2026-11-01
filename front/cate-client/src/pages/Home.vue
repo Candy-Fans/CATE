@@ -13,7 +13,7 @@
         <el-table :data="randomFood"><!-- 将随机的美食信息加载到表格当中 -->
           <el-table-column label="美食图片">
             <template slot-scope="scope">            
-              <img :src="'http://localhost:8888'+scope.row.pic"  min-width="70" height="70" />
+              <img :src="$store.state.configure.HOST+scope.row.pic"  min-width="70" height="70" />
             </template> 
           </el-table-column>
           <el-table-column property="name" label="美食名称"></el-table-column>

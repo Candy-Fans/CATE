@@ -41,5 +41,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../assets/css/search-food-lists.scss';
+@import '../../assets/css/search-food-Lists.scss';
 </style>
